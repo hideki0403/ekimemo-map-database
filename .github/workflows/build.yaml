@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.tag.outputs.exists }}
+      version: v${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: Seo-4d696b75/station_database
+
+      - name: Get database version
+        id: version
+        run: |
+          VERSION=$(cat latest_info.json | jq '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check tag exists
+        uses: mukunku/tag-exists-action@v1.6.0
+        id: tag
+        with:
+          tag: v${{ steps.version.outputs.version }}
+
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.skip == 'false'}}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout master repository
+        uses: actions/checkout@v4
+        with:
+          repository: Seo-4d696b75/station_database
+          path: station_database
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
+
+      - name: Run
+        run: deno run --allow-read --allow-write build.ts
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ needs.check.outputs.version }}
+          body: |
+            このリリースはGithub Actionsによって自動生成されました。
+            駅情報の更新については以下のChangelogを参照してください。
+            [Changelog](https://github.com/Seo-4d696b75/station_database/releases/tag/${{ needs.check.outputs.version }})
+          tag_name: ${{ needs.check.outputs.version }}
+          files: station_database.msgpack
