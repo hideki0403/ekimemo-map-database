@@ -1,5 +1,8 @@
 name: Build
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   schedule:
@@ -63,3 +66,4 @@ jobs:
             [Changelog](https://github.com/Seo-4d696b75/station_database/releases/tag/${{ needs.check.outputs.version }})
           tag_name: ${{ needs.check.outputs.version }}
           files: station_database.msgpack
+          token: ${{ secrets.GITHUB_TOKEN }}
