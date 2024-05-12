@@ -59,7 +59,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ needs.check.outputs.version }}
+          name: ${{ needs.check.outputs.version }}
           body: |
             このリリースはGithub Actionsによって自動生成されました。
             駅情報の更新については以下のChangelogを参照してください。
