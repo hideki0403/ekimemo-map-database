@@ -26,8 +26,12 @@ const line: Record<string, any>[] = []
 for (const item of readJson<Record<string, string>[]>('line.json') ?? []) {
     const lineData = readJson<Record<string, any>>(`line/${item.code}.json`)!
     const polylineData = readJson<Record<string, any>>(`polyline/${item.code}.json`)
-    lineData['polyline_list'] = polylineData
+
     if (!polylineData) console.warn(`warn: polyline ${item.code} not found`)
+
+    lineData['polyline_list'] = polylineData
+    lineData['station_list'] = lineData['station_list'].map((x: Record<string, string>) => x.id)
+
     line.push(lineData)
 }
 
