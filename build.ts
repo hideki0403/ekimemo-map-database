@@ -1,5 +1,7 @@
 import { join } from 'https://deno.land/std@0.224.0/path/mod.ts'
-import { encode } from "https://deno.land/x/msgpack@v1.4/mod.ts";
+import { encode } from 'https://deno.land/x/msgpack@v1.4/mod.ts'
+import rewind from 'npm:@mapbox/geojson-rewind@0.5.1'
+import type { GeoJson } from './types.d.ts'
 
 const rootPath = './station_database/out/main'
 
@@ -21,6 +23,35 @@ function readJson<T>(path: string) {
     }
 }
 
+const station: Record<string, any>[] = []
+
+for (const item of readJson<Record<string, any>[]>('station.json') ?? []) {
+    const voronoi = item.voronoi as GeoJson
+    if (voronoi.geometry.type !== 'LineString') {
+        station.push(item)
+        continue
+    }
+
+    // LineStringからPolygonに変換
+    const firstPosition = voronoi.geometry.coordinates[0]
+    const polygon = {
+        type: 'Polygon',
+        coordinates: [
+            voronoi.geometry.coordinates.concat([firstPosition])
+        ]
+    }
+
+    station.push({
+        ...item,
+        voronoi: {
+            ...voronoi,
+            geometry: rewind(polygon)
+        }
+    })
+
+    console.log(`info: station ${item.id} voronoi converted to Polygon`)
+}
+
 const line: Record<string, any>[] = []
 
 for (const item of readJson<Record<string, string>[]>('line.json') ?? []) {
@@ -36,7 +67,7 @@ for (const item of readJson<Record<string, string>[]>('line.json') ?? []) {
 }
 
 Deno.writeFileSync('station_database.msgpack', encode({
-    station: readJson('station.json'),
+    station,
+    line,
     tree: readJson('tree.json'),
-    line
 }))
