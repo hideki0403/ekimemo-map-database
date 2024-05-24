@@ -131,3 +131,4 @@ dist
 
 station_database/
 station_database.msgpack
+station_database.json
