@@ -61,7 +61,7 @@ for (const item of readJson<Record<string, string>[]>('line.json') ?? []) {
     if (!polylineData) console.warn(`warn: polyline ${item.code} not found`)
 
     lineData['polyline_list'] = polylineData
-    lineData['station_list'] = lineData['station_list'].map((x: Record<string, string>) => x.id)
+    lineData['station_list'] = lineData['station_list'].map((x: Record<string, string>) => x.code)
 
     line.push(lineData)
 }
