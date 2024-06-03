@@ -23,10 +23,16 @@ function readJson<T>(path: string) {
     }
 }
 
+const delaunayPoints = readJson<Record<string, any>[]>('delaunay.json') ?? []
 const station: Record<string, any>[] = []
 
 for (const item of readJson<Record<string, any>[]>('station.json') ?? []) {
     const voronoi = item.voronoi as GeoJson
+    const delaunay = delaunayPoints.find(x => x.code === item.code)
+    if (!delaunay) console.warn(`warn: delaunay ${item.code} not found`)
+
+    item.delaunay = delaunay ? delaunay.next : []
+
     if (voronoi.geometry.type !== 'LineString') {
         station.push(item)
         continue
