@@ -77,9 +77,10 @@ for (const item of readJson<Record<string, string>[]>('line.json') ?? []) {
     line.push(lineData)
 }
 
+const rawTree = readJson<Record<string, any>>('tree.json')
 const tree: Record<string, any>[] = []
 
-for (const item of readJson<Record<string, any>[]>('tree.json', 'node_list') ?? []) {
+for (const item of rawTree?.['node_list'] ?? []) {
     const s = rawStation.find(x => x.code === item.code)?.id
     if (!s) console.warn(`warn: station ${item.code} not found in tree`)
 
@@ -89,8 +90,14 @@ for (const item of readJson<Record<string, any>[]>('tree.json', 'node_list') ?? 
     })
 }
 
+const treeRoot = tree.find(x => x.code === rawTree?.['root'])?.id
+if (!treeRoot) console.warn('warn: tree root not found')
+
 Deno.writeFileSync('station_database.msgpack', encode({
     station,
     line,
-    tree,
+    tree: {
+        root: treeRoot,
+        node_list: tree
+    }
 }))
