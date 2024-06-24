@@ -12,12 +12,12 @@ try {
     Deno.exit(1)
 }
 
-function readJson<T>(path: string) {
+function readJson<T>(path: string, prop?: string) {
     const p = join(rootPath, path)
 
     try {
         const data = Deno.readTextFileSync(p)
-        return JSON.parse(data) as T
+        return prop == null ? JSON.parse(data) as T : JSON.parse(data)[prop] as T
     } catch {
         return null
     }
@@ -32,7 +32,7 @@ for (const item of rawStation) {
     if (!delaunay) console.warn(`warn: delaunay ${item.code} not found`)
 
     item.delaunay = !delaunay ? [] : (delaunay.next as number[]).map(x => {
-        const s = rawStation.find(y => y.code === x)!.id
+        const s = rawStation.find(y => y.code === x)?.id
         if (!s) console.warn(`warn: station ${x} not found in delaunay ${item.code}`)
         return s
     })
@@ -77,8 +77,20 @@ for (const item of readJson<Record<string, string>[]>('line.json') ?? []) {
     line.push(lineData)
 }
 
+const tree: Record<string, any>[] = []
+
+for (const item of readJson<Record<string, any>[]>('tree.json', 'node_list') ?? []) {
+    const s = rawStation.find(x => x.code === item.code)?.id
+    if (!s) console.warn(`warn: station ${item.code} not found in tree`)
+
+    tree.push({
+        id: s,
+        ...item,
+    })
+}
+
 Deno.writeFileSync('station_database.msgpack', encode({
     station,
     line,
-    tree: readJson('tree.json'),
+    tree,
 }))
