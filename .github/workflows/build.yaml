@@ -14,7 +14,6 @@ jobs:
     outputs:
       skip: ${{ steps.tag.outputs.exists }}
       version: v${{ steps.version.outputs.version }}
-      commit: ${{ steps.commit.outputs.status }}
 
     steps:
       - name: Checkout
@@ -33,18 +32,6 @@ jobs:
         id: tag
         with:
           tag: v${{ steps.version.outputs.version }}
-
-      - name: Check need commit
-        id: commit
-        run: |
-          LAST_COMMIT=$(git log --date=unix --pretty=format:"%ad" -1)
-          CURRENT_TIME=$(date +%s)
-
-          if [ $(($CURRENT_TIME - $LAST_COMMIT)) -gt 2592000 ]; then
-            echo "status=true" >> $GITHUB_OUTPUT
-          else
-            echo "status=false" >> $GITHUB_OUTPUT
-          fi
 
   build:
     needs: check
@@ -83,8 +70,6 @@ jobs:
 
   # 最終コミットから30日以上経過している場合は空コミットを行う (cronの停止対策)
   commit:
-    needs: check
-    if: ${{ needs.check.outputs.commit == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -97,7 +82,20 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
+      - name: Check need commit
+        id: commit
+        run: |
+          LAST_COMMIT=$(git log --date=unix --pretty=format:"%ad" -1)
+          CURRENT_TIME=$(date +%s)
+
+          if [ $(($CURRENT_TIME - $LAST_COMMIT)) -gt 2592000 ]; then
+            echo "status=true" >> $GITHUB_OUTPUT
+          else
+            echo "status=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Commit
+        if: ${{ steps.commit.outputs.status == 'true' }}
         run: |
           git commit --allow-empty -m "chore: prevent automatic workflow stopping" -m "see: https://docs.github.com/en/actions/managing-workflow-runs/disabling-and-enabling-a-workflow"
           git push
