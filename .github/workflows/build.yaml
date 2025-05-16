@@ -51,7 +51,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1
         with:
-          deno-version: vx.x.x
+          deno-version: v2.3.x
 
       - name: Run
         run: deno run --allow-read --allow-write build.ts
