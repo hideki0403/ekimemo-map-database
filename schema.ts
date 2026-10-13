@@ -1,5 +1,23 @@
 import { FromSchema } from 'npm:json-schema-to-ts@3.1.1'
 
+export const metadataSchema = {
+    "type": "object",
+    "title": "metadata",
+    "description": "metadata schema",
+    "properties": {
+        "version": {
+            "type": "number"
+        },
+        "size": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "version",
+        "size"
+    ]
+} as const
+
 // Schema from https://github.com/Seo-4d696b75/station_database/tree/main/out/main/schema
 
 export const delaunaySchema = {

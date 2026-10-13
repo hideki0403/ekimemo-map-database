@@ -16,20 +16,21 @@ interface ObjectValueMap {
     [index: string | number]: ObjectValueType;
 }
 
-const rootPath = './station_database/out/main'
+const rootPath = './station_database'
+const artifactsPath = join(rootPath, 'out/main')
 
 try {
-    Deno.statSync(rootPath)
+    Deno.statSync(artifactsPath)
 } catch {
     console.error('station_database not found')
     Deno.exit(1)
 }
 
-export function readJson<T extends JSONSchema, U>(path: string, schema: T, fallback: U): FromSchema<T> | U
-export function readJson<T extends JSONSchema>(path: string, schema: T, fallback?: undefined): FromSchema<T> | null
+export function readJson<T extends JSONSchema, U>(path: string, schema: T, fallback: U, resolveFromRoot?: boolean): FromSchema<T> | U
+export function readJson<T extends JSONSchema>(path: string, schema: T, fallback?: undefined, resolveFromRoot?: boolean): FromSchema<T> | null
 
-export function readJson<T extends JSONSchema, U>(path: string, _schema: T, fallback?: U): FromSchema<T> | U | null {
-    const p = join(rootPath, path)
+export function readJson<T extends JSONSchema, U>(path: string, _schema: T, fallback?: U, resolveFromRoot = false): FromSchema<T> | U | null {
+    const p = join(resolveFromRoot ? rootPath : artifactsPath, path)
 
     try {
         const data = Deno.readTextFileSync(p)

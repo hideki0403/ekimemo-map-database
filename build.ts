@@ -2,6 +2,8 @@ import rewind from 'npm:@mapbox/geojson-rewind@0.5.1'
 import { encodeMessagePack, readJson } from './utils.ts'
 import * as Schema from './schema.ts'
 
+const metadata = readJson('latest_info.json', Schema.metadataSchema, { version: 'unknown' }, true)
+
 const delaunayPoints = readJson('delaunay.json', Schema.delaunaySchema, [])
 const rawStation = new Map(readJson('station.json', Schema.stationSchema, []).map(x => [x.code, x] as const))
 const station: (Schema.StationArray[number] & { delaunay?: number[] })[] = []
@@ -97,6 +99,7 @@ if (!rawTree?.root) {
 if (!treeRoot) console.warn('warn: tree root not found')
 
 Deno.writeFileSync('station_database.msgpack', encodeMessagePack({
+    version: `v${metadata.version}`,
     station,
     line,
     tree: {
